@@ -18,7 +18,7 @@
 
 let
   inherit (lib) types mkDefault mkIf;
-  inherit (lib.attrsets) mapAttrs;
+  inherit (lib.attrsets) mapAttrs optionalAttrs;
   inherit (lib.lists) optional;
   inherit (lib.options) mkOption;
 
@@ -128,8 +128,10 @@ in
       description = ''
         Group's strategy for migrating allocations from draining nodes.
       '';
-      default = {};
-      type = types.submodule ./migrate.nix;
+      default = null;
+      # Allow null for omission.
+      # Some job types like "system" will error if a migrate block is present.
+      type = types.nullOr (types.submodule ./migrate.nix);
     };
 
     restart = mkOption {
@@ -163,7 +165,6 @@ in
     Tasks = lib.attrsets.mapAttrsToList (name: c: c.__toJSON name) config.tasks;
     Volumes = mapAttrs (name: value: attrTagToJSON value name) config.volumes;
     Update = config.update.__toJSON;
-    Migrate = config.migrate.__toJSON;
     Networks = optional (!(builtins.isNull config.network)) config.network.__toJSON;
 
     # https://github.com/hashicorp/nomad/blob/2d4611a00cd22ccd0590c14d0a39c051e5764f59/api/tasks.go#L308-L313
@@ -172,5 +173,7 @@ in
       Migrate = c.migrate;
       SizeMB = c.size;
     };
+  } // optionalAttrs (!(builtins.isNull config.migrate)) {
+    Migrate = config.migrate.__toJSON;
   };
 }

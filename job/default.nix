@@ -92,7 +92,10 @@ in
         config.jobType = config.type;
         config.vault = mkDefault (removeToJSON config.vault);
         config.update = mkDefault (removeToJSON config.update);
-        config.migrate = mkDefault (removeToJSON config.migrate);
+        config.migrate = mkDefault (
+          if builtins.isNull config.migrate then null
+          else removeToJSON config.migrate
+        );
       });
     };
 
@@ -117,8 +120,8 @@ in
         Default strategy for migrating allocations from draining nodes
         for groups within the job.
       '';
-      default = {};
-      type = types.submodule ./migrate.nix;
+      default = null;
+      type = types.nullOr (types.submodule ./migrate.nix);
     };
 
     __toJSON = mkOption {
