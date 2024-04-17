@@ -16,7 +16,18 @@
 
 { lib }:
 
+let
+  inherit (import ./internal.nix { inherit lib; }) evalJobModules;
+in
+
 rec {
+  evalJobspec = { modules ? [] }:
+    let
+      evaled = evalJobModules { inherit modules; };
+    in {
+      Job = evaled.config.__toJSON;
+    };
+
   toDuration = x:
     if builtins.isInt x then x
     else if builtins.isString x then

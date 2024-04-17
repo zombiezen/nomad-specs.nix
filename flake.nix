@@ -24,26 +24,25 @@
 
   outputs = { self, nixpkgs, flake-utils, ... }:
     let
-      evalJobModules = args: nixpkgs.lib.evalModules (args // {
-        modules = [ ./job ] ++ (args.modules or []);
-        class = "nomadJob";
-      });
+      inherit (import ./internal.nix { lib = nixpkgs.lib; }) evalJobModules;
     in
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
       in
       {
+        packages.docs = (pkgs.nixosOptionsDoc {
+          options = builtins.removeAttrs (evalJobModules { modules = [
+            {
+              id = "docs";
+            }
+          ]; }).options ["_module"];
+        }).optionsCommonMark;
+
         checks = (pkgs.callPackage ./job/checks.nix { inherit self; }).checks;
       }
     ) // {
       lib = (import ./lib.nix { lib = nixpkgs.lib; }) // {
-        evalJobspec = { modules ? [] }:
-          let
-            evaled = evalJobModules { inherit modules; };
-          in {
-            Job = evaled.config.__toJSON;
-          };
       };
     };
 }

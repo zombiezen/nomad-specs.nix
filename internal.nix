@@ -17,7 +17,12 @@
 { lib }:
 
 {
-  removeToJSON = lib.attrsets.filterAttrs (name: _: name != "__toJSON");
+  removeToJSON = x: builtins.removeAttrs x [ "__toJSON" ];
   attrTagOption = x: builtins.elemAt (builtins.attrNames x) 0;
   attrTagToJSON = x: (builtins.elemAt (builtins.attrValues x) 0).__toJSON;
+
+  evalJobModules = args: lib.evalModules (args // {
+    modules = [ ./job ] ++ (args.modules or []);
+    class = "nomadJob";
+  });
 }
