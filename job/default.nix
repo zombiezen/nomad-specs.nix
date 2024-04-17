@@ -18,6 +18,7 @@
 
 let
   inherit (lib) types mkDefault;
+  inherit (lib.attrsets) optionalAttrs;
   inherit (lib.options) mkOption;
 
   inherit (import ../internal.nix { inherit lib; }) removeToJSON;
@@ -61,6 +62,7 @@ in
         "service"
         "system"
         "batch"
+        "sysbatch"
       ];
     };
 
@@ -102,6 +104,14 @@ in
       type = types.submodule ./update.nix;
     };
 
+    periodic = mkOption {
+      description = ''
+        Job schedule
+      '';
+      default = null;
+      type = types.nullOr (types.submodule ./periodic.nix);
+    };
+
     migrate = mkOption {
       description = ''
         Default strategy for migrating allocations from draining nodes
@@ -129,5 +139,7 @@ in
     Priority = config.priority;
     Constraints = builtins.map (c: c.__toJSON) config.constraints;
     TaskGroups = lib.attrsets.mapAttrsToList (name: c: c.__toJSON name) config.groups;
+  } // optionalAttrs (!(builtins.isNull) config.periodic) {
+    Periodic = config.periodic.__toJSON;
   };
 }

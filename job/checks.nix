@@ -39,6 +39,27 @@ let
         ID = "foo";
       };
     };
+
+    testPeriodicJob = {
+      expr = self.lib.evalJobspec { modules = [
+        {
+          id = "docs";
+          type = "batch";
+          periodic.cron = "*/15 * * * * *";
+          periodic.prohibitOverlap = true;
+        }
+      ]; };
+      expected = mkJob {
+        ID = "docs";
+        Type = "batch";
+        Periodic = {
+          Enabled = true;
+          Specs = ["*/15 * * * * *"];
+          ProhibitOverlap = true;
+          TimeZone = "UTC";
+        };
+      };
+    };
   };
 
   failureToString = { name, expected, result }: ''
