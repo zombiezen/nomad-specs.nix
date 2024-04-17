@@ -53,7 +53,7 @@ in
         };
         signal = mkOption {
           description = "Send a configurable signal to the task on template change.";
-          type = types.string;
+          type = types.str;
           example = "SIGUSR1";
         };
       };
