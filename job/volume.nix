@@ -148,7 +148,7 @@ types.attrTag {
       # https://github.com/hashicorp/nomad/blob/0f34c85ee63f6472bd2db1e2487611f4b176c70c/api/tasks.go#L404-L414
       config.__toJSON = name: (commonToJSON name config) // {
         Type = "csi";
-        AcessMode = config.accessMode;
+        AccessMode = config.accessMode;
         AttachmentMode = attrTagOption config.attachment;
       } // optionalAttrs (config.attachment ? file-system) (
         let c = config.attachment.file-system; in {
