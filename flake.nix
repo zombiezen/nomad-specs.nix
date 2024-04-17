@@ -23,26 +23,28 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, ... }:
-    let
-      inherit (import ./internal.nix { lib = nixpkgs.lib; }) evalJobModules;
-    in
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
       in
       {
-        packages.docs = (pkgs.nixosOptionsDoc {
-          options = builtins.removeAttrs (evalJobModules { modules = [
-            {
-              id = "docs";
-            }
-          ]; }).options ["_module"];
-        }).optionsCommonMark;
+        packages.docs =
+          let
+            inherit (import ./internal.nix { lib = nixpkgs.lib; }) evalJobModules;
+            evaled = evalJobModules {
+              modules = [
+                { id = "docs"; }
+              ];
+            };
+            doc = pkgs.nixosOptionsDoc {
+              options = builtins.removeAttrs evaled.options ["_module"];
+            };
+          in
+            doc.optionsCommonMark;
 
         checks = (pkgs.callPackage ./job/checks.nix { inherit self; }).checks;
       }
     ) // {
-      lib = (import ./lib.nix { lib = nixpkgs.lib; }) // {
-      };
+      lib = (import ./lib.nix { lib = nixpkgs.lib; });
     };
 }
